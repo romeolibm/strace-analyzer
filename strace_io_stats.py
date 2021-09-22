@@ -18,6 +18,7 @@
 
 import os
 import sys
+import types
 
 try:
   import optparse
@@ -36,7 +37,11 @@ def print_output_section_footer(title):
   print('-'*78 + "\n")
 
 def print_file_statistics(filedata, formatstr, properties):
-  values = [filedata[p] for p in properties]
+  values = [ float(int(filedata[p]*1000000))/1000000 
+        if type(filedata[p]) == float 
+        else filedata[p] for p in properties
+    ]
+  
   print(formatstr.format(*values))
 
 
@@ -171,6 +176,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) dup2\((?P<fd1>[0-9]+), (?P<fd2>[0-9]+)\).*= (?P<fd>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd1 = int(match.group('fd1'))
           fd = int(match.group('fd'))
@@ -191,6 +199,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) open\(\"(?P<filename>.*)\", (?P<mode>.*)\).*= (?P<fd>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if fd == -1:
@@ -210,6 +221,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) openat\((?P<dirfd>.*), \"(?P<filename>.*)\", (?P<mode>.*)\).*= (?P<fd>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if fd == -1:
@@ -232,6 +246,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) fcntl\((?P<fd1>[0-9]+), .*, (?P<fd2>[0-9]+)\).*= (?P<ret>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           if not match:
              continue
@@ -254,6 +271,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) eventfd2\((?P<mode>.*)\).*= (?P<fd>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if fd == -1:
@@ -270,6 +290,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) socket\((?P<mode>.*)\).*= (?P<fd>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if fd == -1:
@@ -286,6 +309,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) socketpair\((?P<mode>.*), \[(?P<fd1>[0-9]+), (?P<fd2>[0-9]+)\]\).*= (?P<ret>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd1 = int(match.group('fd1'))
           fd2 = int(match.group('fd2'))
@@ -304,6 +330,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) pipe\(\[(?P<fd1>[0-9]+), (?P<fd2>[0-9]+)\]\).*= (?P<ret>-?[0-9]+).*<(?P<open_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd1 = int(match.group('fd1'))
           fd2 = int(match.group('fd2'))
@@ -321,6 +350,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
             r'(?P<difftime>[0-9]+\.[0-9]+) close\((?P<fd>[0-9]+)\).*= (?P<ret>-?[0-9]+).*<(?P<close_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if not open_file_tracker.is_open(fd):
@@ -334,12 +366,16 @@ def parseInputFiles(inputfiles):
           match = re.search(
                   r'(?P<difftime>[0-9]+\.[0-9]+) p?write(?:64|v)?\((?P<fd>[0-9]+), ?.*, (?P<size>[0-9]+)\).*= (?P<write_size>-?[0-9]+).*<(?P<write_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if open_file_tracker.is_open(fd):
             filename = open_file_tracker.get_filename(fd)
             file_access_stats[filename]['write_times'].append(float(match.group('write_time')))
             file_access_stats[filename]['write_sizes'].append(int(match.group('write_size')))
+            #logging.debug("lineno={},wsz={},wtm={},line={}".format(lineno,match.group('write_size'),match.group('write_time'),line))
           else:
             logging.warning("No Open file found for file descriptor {}".format(fd))
         elif "read(" in line or "readv(" in line or "read64(" in line and not "process_vm_readv" in line:
@@ -347,6 +383,9 @@ def parseInputFiles(inputfiles):
           match = re.search(
                   r'(?P<difftime>[0-9]+\.[0-9]+) p?read(?:64|v)?\((?P<fd>[0-9]+), ?.*, (?P<size>[0-9]+)\).*= (?P<read_size>-?[0-9]+).*<(?P<read_time>[0-9]+\.[0-9]+)>',
             line)
+          if not match:
+            logging.debug("Unknown line (match) type: '{}'".format(line.strip()))              
+            continue
           # logging.debug("{0}".format(match.groupdict()))
           fd = int(match.group('fd'))
           if open_file_tracker.is_open(fd):
@@ -463,8 +502,11 @@ def main():
   properties = options.format.split(',')
   if 'all' in properties:
     properties = all_properties
-  formatstr = '{0}{1}{2}'.format('{', ':>8} {'.join(map(str, list(range(len(properties))))), ':>8}')
-  formatstr = formatstr + " {{{0}}}".format(len(properties))
+  #formatstr = '{0}{1}{2}'.format('{', ':>8},{'.join(map(str, list(range(len(properties))))), ':>8}')
+  #formatstr = formatstr + " {{{0}}}".format(len(properties))
+  formatstr = '{0}{1}{2}'.format('{', '},{'.join(map(str, list(range(len(properties))))), '}')
+  formatstr = formatstr + ",{{{0}}}".format(len(properties))
+  #print("formatstr=",formatstr)
   properties.append('filename')
 
   sort_by = properties[0]
@@ -474,7 +516,7 @@ def main():
     sort_by = options.sort_by
   sorted_filenames = sorted(file_access_stats.values(), reverse=True, key=lambda k: k[sort_by])
 
-  print_output_section_title("I/O STATISTICS (sorted by {0})".format(sort_by))
+  #print_output_section_title("I/O STATISTICS (sorted by {0})".format(sort_by))
   print(formatstr.format(*properties))
   for filedata in sorted_filenames:
     filename = filedata['filename']
@@ -482,17 +524,19 @@ def main():
       print_file_statistics(file_access_stats[filename], formatstr, properties)
       if options.file_details:
         save_file_details(file_access_stats[filename])
-  print_output_section_footer("I/O STATISTICS")
+  #print_output_section_footer("I/O STATISTICS")
 
   if options.unknown_call_stats:
-    print_output_section_title("HIDDEN STATISTICS (sorted by time)")
+    #print_output_section_title("HIDDEN STATISTICS (sorted by time)")
     unknown_call_times = dict()
     for callname in unknown_calls.keys():
       unknown_call_times[callname] = sum(unknown_calls[callname]['times'])
-    print("{0:16} {1:>12} {2:>12}".format("callname", "count", "time"))
+    #print("{0:16} {1:>12} {2:>12}".format("callname", "count", "time"))
+    print("{0},{1},{2}".format("callname", "count", "time"))
     for callname, time in sorted(unknown_call_times.items()):
-      print("{0:16} {1:>12} {2:>12.9}".format(callname, unknown_calls[callname]['count'], time))
-    print_output_section_footer("HIDDEN STATISTICS")
+      #print("{0:16} {1:>12} {2:>12.9}".format(callname, unknown_calls[callname]['count'], time))
+      print("{0},{1},{2}".format(callname, unknown_calls[callname]['count'], time))
+    #print_output_section_footer("HIDDEN STATISTICS")
 
 if __name__ == "__main__":
   main()
